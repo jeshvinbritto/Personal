@@ -1,76 +1,47 @@
-# .NET Core Function App to Windows on Azure
-# Build a .NET Core function app and deploy it to Azure as a Windows function App.
-# Add steps that analyze code, save build artifacts, deploy, and more:
-# https://docs.microsoft.com/en-us/azure/devops/pipelines/languages/dotnet-core
+#=====================
+param(
+[string]$jeshvinbritto,  # the name of your DevOps organization
+[string]$jeshvinbritto, # alternate credentials 
+[string]$P@ssw0rd@123, 
+[string]$TEST, #Project Queried
+[string]$reportGuid, #id of ther query being output
+[string]$buildVersion,
+[string]$applicationName,
+[string]$apiVersion = "1.0",
+[string]$fileName = ".\ReleaseNotes.html"
+)
+#======================
+ 
+Write-Host "Starting generating release notes for " + $buildVersion
 
-trigger:
-- master
+$basicAuth = ("{0}:{1}" -f $Jeshvinbritto,$P@ssw0rd@123)
+$basicAuth = [System.Text.Encoding]::UTF8.GetBytes($basicAuth)
+$basicAuth = [System.Convert]::ToBase64String($basicAuth)
+$headers = @{Authorization=("Basic {0}" -f $basicAuth)}
 
-variables:
-  # Azure Resource Manager connection created during pipeline creation
-  azureSubscription: 'af3bca4d-f00b-419a-bed2-16b57dad4a51'
+#=== Get the list of items in this release ===
+$reportUrl = "https://" + $account + ".visualstudio.com/DefaultCollection/" + $project + "/_apis/wit/wiql/" + $reportGuid + "?api-version=" + $apiVersion
+Write-Host "Calling to get release items: " $reportUrl
+$reportItems = Invoke-RestMethod -Uri $reportUrl -headers $headers -Method Get
+ 
+$releaseNotes = "<html><title>" + $applicationName + " " + $buildVersion + "</title><body><h1>Release Notes for " + $applicationName + " " + $buildVersion + "</h1>"
 
-  # Function app name
-  functionAppName: 'AbiJB'
+#=== Add the details for each item ===
+foreach($reportItem in $reportItems.workItems)
+{
+  #=== Get the work item details ===
+  Write-Host " - Getting release item details: " $reportItem.Url
+  $reportItemDetails = Invoke-RestMethod -Uri $reportItem.Url -headers $headers -Method Get
+ 
+  #=== Add the work items details to the output ===
+  $workItemUrl = "https://" + $account + ".visualstudio.com/DefaultCollection/" + $project + "/_workitems#_a=edit&fullScreen=true&id=" + $reportItemDetails.Id
+  $releaseNotes += "<p><a href='" + $workItemUrl + "'>" + $reportItemDetails.fields.'System.WorkItemType' + " " + $reportItemDetails.Id + "</a> " + $reportItemDetails.fields.'System.Title' +"<br/>"
+  $releaseNotes += "<b>Description</b><br/>" + $reportItemDetails.fields.'System.Title' + "</p>"
+}
 
-  # Agent VM image name
-  vmImageName: 'windows-2019'
+$releaseNotes += "</body></html>"
 
-  # Working Directory
-  workingDirectory: '$(System.DefaultWorkingDirectory)/AzureDevOpsReleaseNotes'
-
-stages:
-- stage: Build
-  displayName: Build stage
-
-  jobs:
-  - job: Build
-    displayName: Build
-    pool:
-      vmImage: $(vmImageName)
-
-    steps:
-    - task: DotNetCoreCLI@2
-      displayName: Build
-      inputs:
-        command: 'build'
-        projects: |
-          $(workingDirectory)/*.csproj
-        arguments: --output $(System.DefaultWorkingDirectory)/publish_output --configuration Release
-
-    - task: ArchiveFiles@2
-      displayName: 'Archive files'
-      inputs:
-        rootFolderOrFile: '$(System.DefaultWorkingDirectory)/publish_output'
-        includeRootFolder: false
-        archiveType: zip
-        archiveFile: $(Build.ArtifactStagingDirectory)/$(Build.BuildId).zip
-        replaceExistingArchive: true
-
-    - publish: $(Build.ArtifactStagingDirectory)/$(Build.BuildId).zip
-      artifact: drop
-
-- stage: Deploy
-  displayName: Deploy stage
-  dependsOn: Build
-  condition: succeeded()
-
-  jobs:
-  - deployment: Deploy
-    displayName: Deploy
-    environment: 'development'
-    pool:
-      vmImage: $(vmImageName)
-
-    strategy:
-      runOnce:
-        deploy:
-
-          steps:
-          - task: AzureFunctionApp@1
-            displayName: 'Azure functions app deploy'
-            inputs:
-              azureSubscription: '$(azureSubscription)'
-              appType: functionApp
-              appName: $(functionAppName)
-              package: '$(Pipeline.Workspace)/drop/$(Build.BuildId).zip'
+#=== Write the release notes to the output file === 
+Write-Host "Starting to write release notes to: " + $fileName
+$releaseNotes | out-file $fileName
+Write-Host "Finished writing release notes"
