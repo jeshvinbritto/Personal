@@ -1,6 +1,6 @@
 #=====================
 param(
-[string]$jeshvinbritto,  # the name of your DevOps organization
+[string]$ jeshvinbritto,  # the name of your DevOps organization
 [string]$jeshvinbritto, # alternate credentials 
 [string]$P@ssw0rd@123, 
 [string]$TEST, #Project Queried
