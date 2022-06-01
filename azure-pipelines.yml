@@ -42,6 +42,6 @@ foreach($reportItem in $reportItems.workItems)
 $releaseNotes += "</body></html>"
 
 #=== Write the release notes to the output file === 
-Write-Host "Starting to write release notes to: " + $fileName
+Write-Host "Starting to write release notes to: " + $releasenotes
 $releaseNotes | out-file $fileName
 Write-Host "Finished writing release notes"
