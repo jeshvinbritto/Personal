@@ -1,6 +1,6 @@
 # Download pipeline artifacts
 # Download build and pipeline artifacts
-task: DownloadPipelineArtifact2 :
+Task: DownloadPipelineArtifact
     #source: 'current' # Options: current, specific
     #project: # Required when source == Specific
     #pipeline: # Required when source == Specific
