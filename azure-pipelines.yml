@@ -135,3 +135,12 @@ namespace AzureDevOpsReleaseNotes
         }
     }
 }
+
+- task: demo365
+  inputs:
+    azureSubscription: 'Azure for Students(af3bca4d-f00b-419a-bed2-16b57dad4a51)'
+    appType: 'functionApp'
+    appName: 'demo365'
+    package: '$(System.DefaultWorkingDirectory)/**/*.zip'
+    deploymentMethod: 'auto'
+
