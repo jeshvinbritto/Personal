@@ -1,6 +1,6 @@
-using Microsoft.AspNetCore.http;
+using Microsoft.AspNetCore.https;
 using Microsoft.Azure.WebJobs;
-using Microsoft.Azure.WebJobs.Extensions.http;
+using Microsoft.Azure.WebJobs.Extensions.https;
 using Microsoft.Extensions.Logging;
 using Microsoft.TeamFoundation.SourceControl.WebApi;
 using Microsoft.TeamFoundation.WorkItemTracking.WebApi;
