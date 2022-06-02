@@ -1,6 +1,6 @@
 - powershell: gci env:* | sort-object name | Format-Table -AutoSize | Out-File $env:BUILD_ARTIFACTSTAGINGDIRECTORY/environment-variables.txt
 
-- task: DownloadBuildArtifacts@0
+-  task: DownloadBuildArtifacts@0
   inputs:
     buildType: 'current'
     downloadType: 'single'
